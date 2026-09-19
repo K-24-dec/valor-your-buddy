@@ -66,14 +66,14 @@ export const QuestTimerCard: React.FC<QuestTimerCardProps> = ({
   const getDifficultyHeader = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case 'epic':
-        return { label: '⚔ EPIC QUEST', style: 'text-rose-400 border-rose-500/50 bg-rose-500/10 shadow-[0_0_15px_rgba(244,63,94,0.3)]' };
+        return { label: '⚔ EPIC QUEST', style: 'text-[#E8D3A2] border-[#E8D3A2]/50 bg-[#E8D3A2]/10' };
       case 'hard':
-        return { label: '⚔ HARD QUEST', style: 'text-amber-400 border-amber-500/50 bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.3)]' };
+        return { label: '⚔ HARD QUEST', style: 'text-[#E8D3A2] border-[#E8D3A2]/40 bg-[#E8D3A2]/10' };
       case 'medium':
-        return { label: '⚔ MEDIUM QUEST', style: 'text-cyan-400 border-cyan-500/50 bg-cyan-500/10 shadow-[0_0_15px_rgba(0,240,255,0.3)]' };
+        return { label: '⚔ MEDIUM QUEST', style: 'text-[#F5E7C6] border-[#E8D3A2]/30 bg-[#E8D3A2]/10' };
       case 'easy':
       default:
-        return { label: '⚔ EASY QUEST', style: 'text-emerald-400 border-emerald-500/50 bg-emerald-500/10' };
+        return { label: '⚔ EASY QUEST', style: 'text-[#B8C4D0] border-[#E8D3A2]/20 bg-[#102A43]' };
     }
   };
 
@@ -81,16 +81,16 @@ export const QuestTimerCard: React.FC<QuestTimerCardProps> = ({
     switch (category) {
       case 'Coding':
       case 'Study':
-        return { label: '🧠 INTELLECT', icon: Brain, color: 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10' };
+        return { label: '🧠 INTELLECT', icon: Brain, color: 'text-[#E8D3A2] border-[#E8D3A2]/30 bg-[#E8D3A2]/10' };
       case 'Fitness':
-        return { label: '🏋️ STRENGTH', icon: Dumbbell, color: 'text-rose-400 border-rose-500/30 bg-rose-500/10' };
+        return { label: '🏋️ STRENGTH', icon: Dumbbell, color: 'text-[#E8D3A2] border-[#E8D3A2]/30 bg-[#E8D3A2]/10' };
       case 'Reading':
       case 'Creativity':
-        return { label: '📖 WISDOM', icon: BookOpen, color: 'text-purple-400 border-purple-500/30 bg-purple-500/10' };
+        return { label: '📖 WISDOM', icon: BookOpen, color: 'text-[#F5E7C6] border-[#E8D3A2]/30 bg-[#E8D3A2]/10' };
       case 'Health':
-        return { label: '⚡ AGILITY', icon: Zap, color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' };
+        return { label: '⚡ AGILITY', icon: Zap, color: 'text-[#E8D3A2] border-[#E8D3A2]/30 bg-[#E8D3A2]/10' };
       default:
-        return { label: '🎯 DISCIPLINE', icon: Shield, color: 'text-amber-400 border-amber-500/30 bg-amber-500/10' };
+        return { label: '🎯 DISCIPLINE', icon: Shield, color: 'text-[#E8D3A2] border-[#E8D3A2]/30 bg-[#E8D3A2]/10' };
     }
   };
 
@@ -98,9 +98,9 @@ export const QuestTimerCard: React.FC<QuestTimerCardProps> = ({
   const attrInfo = getAttributeBadge(quest.category);
 
   return (
-    <div className="group rpg-card-surface hover:border-cyan-400/60 rounded-2xl p-5 shadow-xl transition-all duration-300 font-mono flex flex-col justify-between relative overflow-hidden">
+    <div className="group bg-[#102A43] border border-[#E8D3A2]/20 hover:border-[#E8D3A2]/50 rounded-2xl p-5 shadow-xl transition-all duration-300 font-['Plus_Jakarta_Sans',sans-serif] flex flex-col justify-between relative overflow-hidden">
       {/* Glow Hover Line */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#E8D3A2] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       <div>
         {/* RPG Quest Header & Difficulty Callout */}
@@ -118,7 +118,7 @@ export const QuestTimerCard: React.FC<QuestTimerCardProps> = ({
             {!quest.completed && (
               <button
                 onClick={() => onEditClick(quest)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80"
+                className="p-1.5 rounded-lg text-[#B8C4D0] hover:text-[#F8FAFC] hover:bg-[#071522] cursor-pointer"
                 title="Reforge Quest"
               >
                 <Edit3 className="w-4 h-4" />
@@ -126,7 +126,7 @@ export const QuestTimerCard: React.FC<QuestTimerCardProps> = ({
             )}
             <button
               onClick={() => onDeleteClick(quest.id)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10"
+              className="p-1.5 rounded-lg text-[#B8C4D0] hover:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
               title="Delete Quest"
             >
               <Trash2 className="w-4 h-4" />
@@ -135,63 +135,63 @@ export const QuestTimerCard: React.FC<QuestTimerCardProps> = ({
         </div>
 
         {/* Quest Title & Description */}
-        <h4 className="text-base font-extrabold text-white group-hover:text-cyan-300 transition mb-1">
+        <h4 className="text-base font-extrabold text-[#F8FAFC] group-hover:text-[#E8D3A2] transition mb-1">
           {quest.title}
         </h4>
 
         {quest.description && (
-          <p className="text-xs text-slate-400 font-sans mb-4 leading-relaxed">
+          <p className="text-xs text-[#B8C4D0] mb-4 leading-relaxed">
             {quest.description}
           </p>
         )}
 
         {/* Real-Time Active Quest HUD Timer */}
         {questState === 'ACTIVE' && (
-          <div className="my-3 bg-[#050814] border border-cyan-500/40 rounded-xl p-3.5 space-y-2 shadow-inner">
+          <div className="my-3 bg-[#071522] border border-[#E8D3A2]/30 rounded-xl p-3.5 space-y-2 shadow-inner">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-cyan-400 font-bold flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-cyan-400 animate-spin" />
+              <span className="text-[#E8D3A2] font-bold flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-[#E8D3A2] animate-spin" />
                 QUEST IN PROGRESS
               </span>
-              <span className="text-white font-black text-sm">{formatMinSec(elapsedSecondsTotal)}</span>
+              <span className="text-[#F8FAFC] font-black text-sm">{formatMinSec(elapsedSecondsTotal)}</span>
             </div>
 
-            {/* Cyberpunk Animated Progress Bar */}
-            <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden p-[1px] border border-slate-800">
+            {/* Progress Bar */}
+            <div className="w-full h-3 bg-[#0B1F33] rounded-full overflow-hidden p-[1px] border border-[#E8D3A2]/20">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-sky-300 to-blue-500 shadow-[0_0_12px_rgba(0,240,255,0.8)] transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-[#E8D3A2] to-[#F5E7C6] shadow-[0_0_12px_rgba(232,211,162,0.6)] transition-all duration-500"
                 style={{ width: `${progressPercentage}%` }}
               />
             </div>
 
-            <div className="flex justify-between text-[10px] text-slate-400 pt-0.5">
+            <div className="flex justify-between text-[10px] text-[#B8C4D0] pt-0.5">
               <span>Req: {formatMinSec(durationSec)}</span>
-              <span className="text-amber-400 font-bold">Remaining: {formatMinSec(remainingSecondsTotal)}</span>
+              <span className="text-[#F5E7C6] font-bold">Remaining: {formatMinSec(remainingSecondsTotal)}</span>
             </div>
           </div>
         )}
       </div>
 
       {/* Rewards Bar & Action Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-800/80 mt-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#E8D3A2]/15 mt-2">
         {/* Rewards */}
         <div className="flex items-center gap-3 text-xs font-bold">
-          <span className="text-cyan-400">
+          <span className="text-[#E8D3A2]">
             ⚡ +{quest.difficulty === 'Easy' ? 20 : quest.difficulty === 'Medium' ? 40 : quest.difficulty === 'Hard' ? 75 : 150} XP
           </span>
-          <span className="text-amber-400">
+          <span className="text-[#F5E7C6]">
             💰 +{quest.difficulty === 'Easy' ? 10 : quest.difficulty === 'Medium' ? 20 : quest.difficulty === 'Hard' ? 35 : 75} GOLD
           </span>
         </div>
 
-        {/* Tactical State Button */}
+        {/* Action Button */}
         <div>
           {questState === 'READY' && (
             <button
               onClick={() => startQuestTimer(quest.id)}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-black text-xs tracking-wider shadow-[0_0_20px_rgba(168,85,247,0.5)] transition transform hover:scale-[1.03] flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#E8D3A2] hover:bg-[#F5E7C6] text-[#071522] font-black text-xs tracking-wider shadow-[0_0_20px_rgba(232,211,162,0.25)] transition transform hover:scale-[1.03] flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Play className="w-4 h-4 fill-white" />
+              <Play className="w-4 h-4 fill-[#071522]" />
               <span>[ ⚔ START QUEST ]</span>
             </button>
           )}
@@ -199,9 +199,9 @@ export const QuestTimerCard: React.FC<QuestTimerCardProps> = ({
           {questState === 'ACTIVE' && (
             <button
               disabled
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-900 text-slate-500 border border-slate-800 font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#071522] text-[#B8C4D0] border border-[#E8D3A2]/20 font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed"
             >
-              <Lock className="w-4 h-4 text-slate-500" />
+              <Lock className="w-4 h-4 text-[#B8C4D0]" />
               <span>🔒 LOCKED ({formatMinSec(remainingSecondsTotal)})</span>
             </button>
           )}
@@ -209,16 +209,16 @@ export const QuestTimerCard: React.FC<QuestTimerCardProps> = ({
           {questState === 'COMPLETABLE' && (
             <button
               onClick={() => onCompleteClick(quest)}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-[#050814] font-black text-xs tracking-wider shadow-[0_0_25px_rgba(16,185,129,0.6)] transition transform hover:scale-[1.04] flex items-center justify-center gap-2 animate-pulse"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#E8D3A2] hover:bg-[#F5E7C6] text-[#071522] font-black text-xs tracking-wider shadow-[0_0_25px_rgba(232,211,162,0.4)] transition transform hover:scale-[1.04] flex items-center justify-center gap-2 animate-pulse cursor-pointer"
             >
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 className="w-4 h-4 text-[#071522]" />
               <span>[ ✨ COMPLETE QUEST ]</span>
             </button>
           )}
 
           {questState === 'COMPLETED' && (
-            <span className="text-emerald-400 font-bold text-xs flex items-center gap-1">
-              <CheckCircle2 className="w-4 h-4" /> VICTORY RECORDED
+            <span className="text-[#E8D3A2] font-bold text-xs flex items-center gap-1">
+              <CheckCircle2 className="w-4 h-4 text-[#E8D3A2]" /> VICTORY RECORDED
             </span>
           )}
         </div>

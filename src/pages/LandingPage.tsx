@@ -1,199 +1,165 @@
-import React from 'react';
-import { useGame } from '../context/GameContext';
-import {
-  Award,
-  BookOpen,
-  Brain,
-  CheckCircle2,
-  ChevronRight,
-  Flame,
-  Shield,
-  ShoppingBag,
-  Sparkles,
-  Swords,
-  Trophy,
-  Zap,
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { Sparkles, Mic, MessageSquare, Volume2, Globe, CheckCircle2, ArrowRight } from 'lucide-react';
+import { SUPPORTED_LANGUAGES, LanguageCode } from '../services/aiAgentService';
 
 interface LandingPageProps {
   onNavigate: (path: string) => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
-  const { isAuthenticated, character } = useGame();
+  const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode>('English');
+  const [showLangPicker, setShowLangPicker] = useState<boolean>(false);
 
-  const handleStart = () => {
-    if (isAuthenticated) {
-      onNavigate('/dashboard');
-    } else {
-      onNavigate('/signup');
-    }
+  const handleStartTalking = () => {
+    // Save chosen language preference
+    const saved = localStorage.getItem('valor_preferences');
+    const existing = saved ? JSON.parse(saved) : {};
+    localStorage.setItem(
+      'valor_preferences',
+      JSON.stringify({ ...existing, targetLanguage: selectedLanguage })
+    );
+
+    onNavigate('/chat');
   };
 
   return (
-    <div className="min-h-screen bg-[#080c14] text-slate-100 font-mono relative overflow-hidden">
-      {/* Background Neon Grid & Particle Glows */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-900/20 via-[#080c14] to-[#080c14] pointer-events-none" />
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
+    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-between p-4 md:p-8 font-['Plus_Jakarta_Sans',sans-serif] relative overflow-hidden">
+      {/* Background ambient lighting */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#E8D3A2]/10 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Hero Section */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center z-10">
-        {/* Top Tagline Pill */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold mb-6 shadow-[0_0_20px_rgba(0,240,255,0.2)] animate-pulse">
-          <Sparkles className="w-4 h-4 text-cyan-400" />
-          <span>GAMIFIED PRODUCTIVITY SYSTEM</span>
+      {/* Main Hero Header */}
+      <div className="max-w-4xl mx-auto text-center space-y-6 pt-8 md:pt-16 relative z-10">
+        {/* Glowing Badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#E8D3A2]/10 border border-[#E8D3A2]/30 text-[#E8D3A2] text-xs font-mono font-bold">
+          <Sparkles className="w-3.5 h-3.5 text-[#E8D3A2] animate-pulse" />
+          <span>YOUR AI LANGUAGE PARTNER</span>
         </div>
 
-        {/* Title */}
-        <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight text-white mb-6 leading-tight">
-          LIFE <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-200 to-blue-500">RPG</span>
+        {/* Main Headline */}
+        <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-[#F8FAFC] tracking-tight leading-[1.1]">
+          Learn a language by <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E8D3A2] via-white to-[#F5E7C6]">talking.</span>
         </h1>
 
-        {/* Tagline */}
-        <p className="text-xl sm:text-2xl font-bold text-slate-200 mb-4 max-w-3xl mx-auto font-sans">
-          "Turn your real life into an adventure."
+        {/* Supporting Message */}
+        <p className="text-base sm:text-lg md:text-xl text-[#B8C4D0] max-w-2xl mx-auto leading-relaxed font-normal">
+          Talk naturally with your AI language partner. Make mistakes, get better, and become confident one conversation at a time.
         </p>
 
-        {/* Supporting text */}
-        <p className="text-sm sm:text-base text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-          Transform daily chores into real quests. Earn XP, collect Gold, build your attributes, maintain your streak, and level up your real-world character.
-        </p>
-
-        {/* CTAs */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+        {/* Primary CTA Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
           <button
-            onClick={handleStart}
-            className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-[#080c14] font-black tracking-widest text-base shadow-[0_0_40px_rgba(0,240,255,0.5)] transition-all transform hover:scale-105 flex items-center justify-center gap-3"
+            onClick={handleStartTalking}
+            className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[#E8D3A2] hover:bg-[#F5E7C6] text-[#071522] font-black text-base md:text-lg transition-all transform hover:scale-105 shadow-[0_0_35px_rgba(232,211,162,0.4)] flex items-center justify-center gap-3 cursor-pointer"
           >
-            <span>START YOUR JOURNEY</span>
-            <ChevronRight className="w-5 h-5" />
+            <Mic className="w-6 h-6 text-[#071522]" />
+            <span>Start Talking</span>
+            <ArrowRight className="w-5 h-5 text-[#071522]" />
           </button>
+
           <button
-            onClick={() => onNavigate('/quests')}
-            className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[#0d1322] border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 hover:text-white font-bold tracking-wider text-base transition-all hover:bg-cyan-500/10 flex items-center justify-center gap-2"
+            onClick={() => setShowLangPicker(!showLangPicker)}
+            className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-[#102A43] hover:bg-[#102A43]/80 border border-[#E8D3A2]/30 text-[#F8FAFC] font-bold text-sm md:text-base transition-all flex items-center justify-center gap-2.5 cursor-pointer"
           >
-            <span>EXPLORE THE WORLD</span>
+            <Globe className="w-5 h-5 text-[#E8D3A2]" />
+            <span>Target Language: {selectedLanguage}</span>
           </button>
         </div>
 
-        {/* Interactive Visual RPG Preview Showcase */}
-        <div className="max-w-5xl mx-auto bg-[#0d1322]/90 border border-cyan-500/30 rounded-3xl p-6 sm:p-8 shadow-[0_0_80px_rgba(0,240,255,0.25)] backdrop-blur-xl text-left relative">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-rose-500" />
-              <div className="w-3 h-3 rounded-full bg-amber-500" />
-              <div className="w-3 h-3 rounded-full bg-emerald-500" />
-              <span className="text-xs text-slate-400 font-mono ml-2">LIFE_RPG_SYSTEM // ADVENTURE_HUB_PREVIEW</span>
-            </div>
-            <div className="text-xs text-cyan-400 font-mono font-bold">LVL {character.level} HERO</div>
+        {/* Language Picker Dropdown */}
+        {showLangPicker && (
+          <div className="bg-[#102A43] border border-[#E8D3A2]/30 rounded-3xl p-4 max-w-md mx-auto grid grid-cols-2 gap-2 mt-3 shadow-2xl animate-in fade-in slide-in-from-top-2">
+            {SUPPORTED_LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => {
+                  setSelectedLanguage(lang.code);
+                  setShowLangPicker(false);
+                }}
+                className={`p-2.5 rounded-xl text-xs font-bold text-left flex items-center gap-2 border transition-all cursor-pointer ${
+                  selectedLanguage === lang.code
+                    ? 'bg-[#E8D3A2] text-[#071522] border-[#E8D3A2]'
+                    : 'bg-[#071522] text-[#F8FAFC] border-[#E8D3A2]/15 hover:border-[#E8D3A2]/40'
+                }`}
+              >
+                <span>{lang.flag}</span>
+                <span>{lang.name}</span>
+              </button>
+            ))}
           </div>
+        )}
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Character Preview */}
-            <div className="bg-[#080c14] border border-cyan-500/20 rounded-2xl p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-400 flex items-center justify-center text-cyan-400 font-bold">
-                  <Shield className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-white text-sm">{character.name}</h4>
-                  <p className="text-[10px] text-cyan-400">✨ {character.equipped_title}</p>
-                </div>
-              </div>
+      {/* Live Visual Demonstration Preview Card */}
+      <div className="max-w-xl w-full mx-auto my-12 bg-[#102A43]/90 border border-[#E8D3A2]/25 rounded-3xl p-6 shadow-2xl space-y-4 relative z-10">
+        <div className="flex items-center justify-between text-xs font-mono text-[#B8C4D0] border-b border-[#E8D3A2]/15 pb-3">
+          <span className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            Live Conversation Preview
+          </span>
+          <span className="text-[#E8D3A2]">Natural AI Feedback</span>
+        </div>
 
-              {/* Progress Bar */}
-              <div className="space-y-1 text-xs">
-                <div className="flex justify-between text-[10px] text-slate-400">
-                  <span>XP PROGRESS</span>
-                  <span className="text-cyan-400">450 / 800 XP</span>
-                </div>
-                <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden">
-                  <div className="w-[56%] h-full bg-cyan-400 shadow-[0_0_10px_rgba(0,240,255,0.6)]" />
-                </div>
-              </div>
-            </div>
+        {/* Message Turn 1 */}
+        <div className="flex flex-col items-start space-y-1">
+          <div className="p-3.5 rounded-2xl bg-[#071522] border border-[#E8D3A2]/20 text-xs text-[#F8FAFC]">
+            <strong>Valor AI:</strong> "Hi! What did you do today?"
+          </div>
+        </div>
 
-            {/* Quests Preview */}
-            <div className="bg-[#080c14] border border-cyan-500/20 rounded-2xl p-5 space-y-3">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-300">
-                <span className="flex items-center gap-1.5">
-                  <Swords className="w-4 h-4 text-cyan-400" /> ACTIVE QUEST
-                </span>
-                <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
-                  HARD
-                </span>
-              </div>
-              <p className="text-xs font-bold text-white">⚔️ Master Async JavaScript Patterns</p>
-              <div className="flex items-center justify-between text-[10px] text-slate-400">
-                <span className="text-cyan-400">+75 XP • +35 GOLD</span>
-                <span className="text-purple-400">INTELLIGENCE +5</span>
-              </div>
-            </div>
+        {/* Message Turn 2 */}
+        <div className="flex flex-col items-end space-y-1">
+          <div className="p-3.5 rounded-2xl bg-[#E8D3A2] text-[#071522] font-semibold text-xs">
+            <strong>You:</strong> "I go to college yesterday."
+          </div>
+        </div>
 
-            {/* Streak & Treasury Preview */}
-            <div className="bg-[#080c14] border border-cyan-500/20 rounded-2xl p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-orange-400 flex items-center gap-1">
-                  <Flame className="w-4 h-4 text-orange-500" /> STREAK
-                </span>
-                <span className="text-sm font-extrabold text-orange-400">🔥 5 DAYS</span>
-              </div>
-              <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-                <span className="text-xs font-bold text-amber-400">GOLD TREASURY</span>
-                <span className="text-sm font-extrabold text-amber-300">🪙 380 GOLD</span>
-              </div>
+        {/* Message Turn 3 with Natural Correction */}
+        <div className="flex flex-col items-start space-y-2">
+          <div className="p-3.5 rounded-2xl bg-[#071522] border border-[#E8D3A2]/20 text-xs text-[#F8FAFC] space-y-2">
+            <p>
+              <strong>Valor AI:</strong> "Nice! What did you do at college yesterday?"
+            </p>
+            <div className="p-2.5 bg-[#102A43] border border-[#E8D3A2]/30 rounded-xl text-[11px] text-[#E8D3A2] font-medium flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#E8D3A2] shrink-0" />
+              <span>💡 By the way, a more natural way to say that is: <strong>“I went to college yesterday.”</strong></span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Core RPG Loop Pillars */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 z-10 relative">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-white mb-12 font-mono">
-          THE REAL-LIFE PROGRESSION LOOP
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-[#0d1322] border border-cyan-500/20 rounded-2xl p-6 text-center hover:border-cyan-400/50 transition">
-            <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 mx-auto flex items-center justify-center text-cyan-400 mb-4">
-              <Swords className="w-6 h-6" />
+      {/* 3 Core Highlights */}
+      <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 text-left w-full mb-8 relative z-10">
+        {[
+          {
+            icon: Mic,
+            title: 'Talk Naturally',
+            desc: 'No rigid lessons or repetitive quizzes. Just talk like you are chatting with a patient friend.',
+          },
+          {
+            icon: Sparkles,
+            title: 'Subtle Corrections',
+            desc: 'The AI helps you fix grammar and vocabulary mistakes naturally without interrupting your flow.',
+          },
+          {
+            icon: CheckCircle2,
+            title: 'Build Real Confidence',
+            desc: 'Transition from knowing grammar rules to actually speaking fluently in real situations.',
+          },
+        ].map((item, i) => {
+          const Icon = item.icon;
+          return (
+            <div
+              key={i}
+              className="p-5 rounded-2xl bg-[#102A43]/50 border border-[#E8D3A2]/15 hover:border-[#E8D3A2]/40 transition-all space-y-2"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#E8D3A2]/15 flex items-center justify-center text-[#E8D3A2]">
+                <Icon className="w-5 h-5" />
+              </div>
+              <h3 className="text-sm font-bold text-[#F8FAFC]">{item.title}</h3>
+              <p className="text-xs text-[#B8C4D0] leading-relaxed">{item.desc}</p>
             </div>
-            <h3 className="font-bold text-white text-base mb-2">1. CREATE QUESTS</h3>
-            <p className="text-xs text-slate-400 leading-relaxed font-sans">
-              Convert mundane work, fitness, coding, and study goals into categorized RPG missions.
-            </p>
-          </div>
-
-          <div className="bg-[#0d1322] border border-cyan-500/20 rounded-2xl p-6 text-center hover:border-cyan-400/50 transition">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 mx-auto flex items-center justify-center text-amber-400 mb-4">
-              <Zap className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-white text-base mb-2">2. EARN XP & GOLD</h3>
-            <p className="text-xs text-slate-400 leading-relaxed font-sans">
-              Complete quests to trigger instant floating reward feedback, XP gain, and Gold earnings.
-            </p>
-          </div>
-
-          <div className="bg-[#0d1322] border border-cyan-500/20 rounded-2xl p-6 text-center hover:border-cyan-400/50 transition">
-            <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 mx-auto flex items-center justify-center text-purple-400 mb-4">
-              <Brain className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-white text-base mb-2">3. LEVEL ATTRIBUTES</h3>
-            <p className="text-xs text-slate-400 leading-relaxed font-sans">
-              Watch your Strength, Intelligence, Wisdom, Agility, and Discipline stats grow deterministically.
-            </p>
-          </div>
-
-          <div className="bg-[#0d1322] border border-cyan-500/20 rounded-2xl p-6 text-center hover:border-cyan-400/50 transition">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 mx-auto flex items-center justify-center text-emerald-400 mb-4">
-              <ShoppingBag className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-white text-base mb-2">4. UNLOCK REWARDS</h3>
-            <p className="text-xs text-slate-400 leading-relaxed font-sans">
-              Spend Gold in the Guild Market to acquire avatars, titles, frames, and legendary cosmetic themes.
-            </p>
-          </div>
-        </div>
+          );
+        })}
       </div>
     </div>
   );

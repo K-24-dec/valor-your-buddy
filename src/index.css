@@ -2,17 +2,17 @@
 
 @layer utilities {
   .rpg-panel-surface {
-    background: rgba(11, 16, 30, 0.88);
+    background: rgba(16, 42, 67, 0.90);
     backdrop-filter: blur(16px);
-    border: 1px solid rgba(0, 240, 255, 0.25);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(0, 240, 255, 0.05);
+    border: 1px solid rgba(232, 211, 162, 0.20);
+    box-shadow: 0 8px 32px rgba(7, 21, 34, 0.6), inset 0 0 15px rgba(232, 211, 162, 0.03);
   }
 
   .rpg-card-surface {
-    background: linear-gradient(135deg, rgba(13, 19, 36, 0.95) 0%, rgba(8, 12, 24, 0.95) 100%);
+    background: linear-gradient(135deg, rgba(16, 42, 67, 0.95) 0%, rgba(11, 31, 51, 0.95) 100%);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 240, 255, 0.2);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(232, 211, 162, 0.20);
+    box-shadow: 0 4px 20px rgba(7, 21, 34, 0.5);
   }
 
   .rpg-hud-border {
@@ -25,55 +25,55 @@
     left: 10%;
     right: 10%;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.6), transparent);
+    background: linear-gradient(90deg, transparent, rgba(232, 211, 162, 0.4), transparent);
   }
 
   /* Rarity Glow Treatments */
   .rarity-common {
-    border-color: rgba(148, 163, 184, 0.4);
-    box-shadow: 0 0 10px rgba(148, 163, 184, 0.1);
+    border-color: rgba(184, 196, 208, 0.3);
+    box-shadow: 0 0 10px rgba(184, 196, 208, 0.1);
   }
   .rarity-uncommon {
-    border-color: rgba(16, 185, 129, 0.5);
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+    border-color: rgba(232, 211, 162, 0.4);
+    box-shadow: 0 0 15px rgba(232, 211, 162, 0.15);
   }
   .rarity-rare {
-    border-color: rgba(0, 240, 255, 0.5);
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+    border-color: rgba(232, 211, 162, 0.6);
+    box-shadow: 0 0 20px rgba(232, 211, 162, 0.25);
   }
   .rarity-epic {
-    border-color: rgba(236, 72, 153, 0.6);
-    box-shadow: 0 0 25px rgba(236, 72, 153, 0.4);
+    border-color: rgba(245, 231, 198, 0.7);
+    box-shadow: 0 0 25px rgba(245, 231, 198, 0.35);
   }
   .rarity-legendary {
-    border-color: rgba(245, 158, 11, 0.7);
-    box-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
+    border-color: rgba(232, 211, 162, 0.9);
+    box-shadow: 0 0 30px rgba(232, 211, 162, 0.5);
   }
 }
 
 body {
-  background-color: #050814;
-  color: #f8fafc;
-  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background-color: #0B1F33;
+  color: #F8FAFC;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
 }
 
-/* Custom Scrollbar for Cyberpunk Dark Theme */
+/* Custom Scrollbar for Navy + Champagne Gold Theme */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #050814;
+  background: #071522;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #102A43;
   border-radius: 3px;
-  border: 1px solid rgba(0, 240, 255, 0.3);
+  border: 1px solid rgba(232, 211, 162, 0.20);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #00f0ff;
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.8);
+  background: #E8D3A2;
+  box-shadow: 0 0 12px rgba(232, 211, 162, 0.5);
 }

@@ -1,14 +1,20 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { INITIAL_CHARACTER, INITIAL_QUESTS, MARKET_ITEMS, INITIAL_ACHIEVEMENTS } from './src/lib/mockSeedData';
 import { processQuestCompletion, validateQuestCompletionEligibility } from './src/lib/gameEngine';
 import { Character, Quest, QuestCompletion, Achievement } from './src/types/game';
+import { transcribeAudioServer, evaluateGrammarServer, synthesizeSpeechServer } from './src/lib/voiceServerEngine';
+import { generateAIChatResponseServer } from './src/lib/aiAgentEngine';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // In-Memory Server State (Authoritative Server Database Backup)
 let serverCharacter: Character = { ...INITIAL_CHARACTER };
@@ -18,17 +24,105 @@ let serverInventory: string[] = ['avatar_cyber_hero', 'frame_neon_cyan', 'title_
 let serverAchievements: Achievement[] = [...INITIAL_ACHIEVEMENTS];
 
 // ------------------------------------
-// AUTHORITATIVE GAME ENGINE API ROUTES
+// AUTHORITATIVE HEALTH & AI API ROUTES
 // ------------------------------------
 
 // 1. Health Check
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    app: 'LIFE RPG — Turn your real life into an adventure.',
-    version: '2.1.0',
+    app: 'VALOR — AI Language Partner Companion',
+    version: '3.0.0',
     timestamp: new Date().toISOString(),
   });
+});
+
+// ------------------------------------
+// AI CONVERSATIONAL AGENT ROUTE
+// ------------------------------------
+
+// Primary AI Language Partner Chat Route
+app.post('/api/ai/chat', async (req, res) => {
+  try {
+    const { userMessage, targetLanguage, nativeLanguage, mode, dailyTopic, userLevel, conversationHistory } = req.body;
+    
+    if (!userMessage || typeof userMessage !== 'string') {
+      return res.status(400).json({ error: 'Missing userMessage parameter.' });
+    }
+
+    const result = await generateAIChatResponseServer({
+      userMessage,
+      targetLanguage: targetLanguage || 'English',
+      nativeLanguage: nativeLanguage || 'English',
+      mode: mode || 'free',
+      dailyTopic: dailyTopic || 'college',
+      userLevel: userLevel || 'intermediate',
+      conversationHistory: conversationHistory || [],
+    });
+
+    res.json(result);
+  } catch (err: any) {
+    console.error('AI Chat API error:', err);
+    res.status(500).json({ error: err.message || 'AI Chat failed.' });
+  }
+});
+
+// ------------------------------------
+// VOICE CONVERSATIONAL LOOP API ROUTES
+// ------------------------------------
+
+// STT: Speech to Text via Whisper / Deepgram / Gemini
+app.post('/api/voice/stt', async (req, res) => {
+  try {
+    const { audioBase64, mimeType } = req.body;
+    if (!audioBase64) {
+      return res.status(400).json({ error: 'Missing audioBase64 payload.' });
+    }
+
+    const result = await transcribeAudioServer(audioBase64, mimeType);
+    res.json(result);
+  } catch (err: any) {
+    console.error('STT API error:', err);
+    res.status(500).json({ error: err.message || 'STT transcription failed.' });
+  }
+});
+
+// LLM Correction & Response: Evaluate for grammar/vocab errors & build response
+app.post('/api/voice/correct', async (req, res) => {
+  try {
+    const { transcript } = req.body;
+    if (!transcript || typeof transcript !== 'string') {
+      return res.status(400).json({ error: 'Missing or invalid transcript string.' });
+    }
+
+    const result = await evaluateGrammarServer(transcript);
+    res.json(result);
+  } catch (err: any) {
+    console.error('LLM Correction API error:', err);
+    res.status(500).json({ error: err.message || 'LLM evaluation failed.' });
+  }
+});
+
+// TTS: Text to Speech via ElevenLabs / Azure TTS
+app.post('/api/voice/tts', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ error: 'Missing text parameter.' });
+    }
+
+    const audioBuffer = await synthesizeSpeechServer(text);
+    if (audioBuffer) {
+      res.set('Content-Type', 'audio/mpeg');
+      return res.send(audioBuffer);
+    }
+
+    // Indicate to client to fallback to browser SpeechSynthesis
+    res.status(204).end();
+  } catch (err: any) {
+    console.error('TTS API error:', err);
+    res.status(500).json({ error: err.message || 'TTS synthesis failed.' });
+  }
 });
 
 // 2. Get Character Info

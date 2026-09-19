@@ -12,16 +12,16 @@ export const CharacterCard: React.FC = () => {
   const getAvatarIcon = () => {
     switch (character.equipped_avatar) {
       case 'avatar_shadow_ninja':
-        return <User className="w-10 h-10 text-cyan-300" />;
+        return <User className="w-10 h-10 text-[#E8D3A2]" />;
       case 'avatar_arcane_mage':
-        return <Sparkles className="w-10 h-10 text-purple-300" />;
+        return <Sparkles className="w-10 h-10 text-[#F5E7C6]" />;
       case 'avatar_mech_warrior':
-        return <Cpu className="w-10 h-10 text-rose-300" />;
+        return <Cpu className="w-10 h-10 text-[#E8D3A2]" />;
       case 'avatar_void_lord':
-        return <Award className="w-10 h-10 text-amber-300 animate-pulse" />;
+        return <Award className="w-10 h-10 text-[#E8D3A2] animate-pulse" />;
       case 'avatar_cyber_hero':
       default:
-        return <Shield className="w-10 h-10 text-cyan-400" />;
+        return <Shield className="w-10 h-10 text-[#E8D3A2]" />;
     }
   };
 
@@ -29,50 +29,50 @@ export const CharacterCard: React.FC = () => {
   const getFrameStyle = () => {
     switch (character.equipped_frame) {
       case 'frame_solar_gold':
-        return 'border-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.5)]';
+        return 'border-[#E8D3A2] shadow-[0_0_25px_rgba(232,211,162,0.5)]';
       case 'frame_cyber_pink':
-        return 'border-pink-500 shadow-[0_0_25px_rgba(236,72,153,0.6)] animate-pulse';
+        return 'border-[#F5E7C6] shadow-[0_0_25px_rgba(245,231,198,0.5)]';
       case 'frame_void_flame':
-        return 'border-purple-500 shadow-[0_0_30px_rgba(168,85,247,0.7)]';
+        return 'border-[#E8D3A2] shadow-[0_0_30px_rgba(232,211,162,0.6)]';
       case 'frame_neon_cyan':
       default:
-        return 'border-cyan-400 shadow-[0_0_20px_rgba(0,240,255,0.4)]';
+        return 'border-[#E8D3A2]/60 shadow-[0_0_20px_rgba(232,211,162,0.3)]';
     }
   };
 
   return (
-    <div className="relative bg-[#0d1322]/90 backdrop-blur-xl border border-cyan-500/20 rounded-3xl p-6 shadow-[0_4px_40px_rgba(0,0,0,0.6)] overflow-hidden font-mono">
-      {/* Background Neon Accent Radial */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="relative bg-[#102A43] border border-[#E8D3A2]/20 rounded-3xl p-6 shadow-xl overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
+      {/* Background Ambient Radial */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-[#E8D3A2]/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Top Header section: Avatar + Title + Level */}
-      <div className="flex flex-col sm:flex-row items-center gap-6 mb-6 pb-6 border-b border-slate-800/80">
+      <div className="flex flex-col sm:flex-row items-center gap-6 mb-6 pb-6 border-b border-[#E8D3A2]/15">
         {/* Avatar Ring */}
-        <div className={`relative w-24 h-24 rounded-2xl bg-[#080c14] border-2 ${getFrameStyle()} flex items-center justify-center p-3 transition-all duration-300`}>
+        <div className={`relative w-24 h-24 rounded-2xl bg-[#071522] border-2 ${getFrameStyle()} flex items-center justify-center p-3 transition-all duration-300`}>
           {getAvatarIcon()}
-          <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-[#080c14] font-black text-xs px-2.5 py-0.5 rounded-lg shadow border border-cyan-300">
+          <div className="absolute -bottom-2 -right-2 bg-[#E8D3A2] text-[#071522] font-black text-xs px-2.5 py-0.5 rounded-lg shadow border border-[#F5E7C6]">
             LVL {character.level}
           </div>
         </div>
 
         {/* Character Bio Info */}
         <div className="flex-1 text-center sm:text-left">
-          <div className="inline-block px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold mb-1">
+          <div className="inline-block px-3 py-1 rounded-full bg-[#E8D3A2]/15 border border-[#E8D3A2]/30 text-[#E8D3A2] text-xs font-bold mb-1">
             ✨ {character.equipped_title || 'Novice Adventurer'}
           </div>
-          <h2 className="text-2xl font-black text-white tracking-wide">{character.name}</h2>
+          <h2 className="text-2xl font-black text-[#F8FAFC] tracking-wide">{character.name}</h2>
 
           {/* XP Progress Bar */}
           <div className="mt-3 w-full">
-            <div className="flex justify-between text-xs text-slate-400 mb-1">
+            <div className="flex justify-between text-xs text-[#B8C4D0] mb-1">
               <span>PROGRESS TO LEVEL {character.level + 1}</span>
-              <span className="text-cyan-400 font-bold">
+              <span className="text-[#E8D3A2] font-bold">
                 {character.xp} / {character.xp_to_next_level} XP ({xpPercentage}%)
               </span>
             </div>
-            <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden p-[1px] border border-slate-800">
+            <div className="w-full h-3 bg-[#071522] rounded-full overflow-hidden p-[1px] border border-[#E8D3A2]/20">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-sky-300 to-blue-500 shadow-[0_0_15px_rgba(0,240,255,0.6)] transition-all duration-700"
+                className="h-full rounded-full bg-gradient-to-r from-[#E8D3A2] to-[#F5E7C6] shadow-[0_0_15px_rgba(232,211,162,0.5)] transition-all duration-700"
                 style={{ width: `${xpPercentage}%` }}
               />
             </div>
@@ -82,28 +82,28 @@ export const CharacterCard: React.FC = () => {
 
       {/* Quick Summary Cards (Gold + Streak) */}
       <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="bg-[#080c14] border border-amber-500/30 rounded-2xl p-3.5 flex items-center gap-3">
+        <div className="bg-[#071522] border border-[#E8D3A2]/30 rounded-2xl p-3.5 flex items-center gap-3">
           <div className="text-2xl">🪙</div>
           <div>
-            <div className="text-[10px] text-amber-400 font-bold uppercase">GUILD TREASURY</div>
-            <div className="text-lg font-extrabold text-amber-300">{character.gold.toLocaleString()} GOLD</div>
+            <div className="text-[10px] text-[#E8D3A2] font-bold uppercase">GUILD TREASURY</div>
+            <div className="text-lg font-extrabold text-[#F5E7C6]">{character.gold.toLocaleString()} GOLD</div>
           </div>
         </div>
 
-        <div className="bg-[#080c14] border border-orange-500/30 rounded-2xl p-3.5 flex items-center gap-3">
-          <Flame className="w-6 h-6 text-orange-500 fill-orange-500 animate-bounce" />
+        <div className="bg-[#071522] border border-[#E8D3A2]/30 rounded-2xl p-3.5 flex items-center gap-3">
+          <Flame className="w-6 h-6 text-[#E8D3A2] fill-[#E8D3A2] animate-bounce" />
           <div>
-            <div className="text-[10px] text-orange-400 font-bold uppercase">CURRENT STREAK</div>
-            <div className="text-lg font-extrabold text-orange-300">{character.current_streak} DAYS</div>
+            <div className="text-[10px] text-[#E8D3A2] font-bold uppercase">CURRENT STREAK</div>
+            <div className="text-lg font-extrabold text-[#F5E7C6]">{character.current_streak} DAYS</div>
           </div>
         </div>
       </div>
 
       {/* Attributes Section */}
       <div>
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center justify-between">
+        <h3 className="text-xs font-bold text-[#B8C4D0] uppercase tracking-widest mb-3 flex items-center justify-between">
           <span>CHARACTER ATTRIBUTES</span>
-          <span className="text-cyan-400 text-[10px]">SERVERSIDE AUTHORITATIVE</span>
+          <span className="text-[#E8D3A2] text-[10px]">SERVERSIDE AUTHORITATIVE</span>
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -111,32 +111,32 @@ export const CharacterCard: React.FC = () => {
             label="INTELLIGENCE"
             value={character.intelligence}
             max={150}
-            color="cyan"
-            icon={<Brain className="w-4 h-4" />}
+            color="amber"
+            icon={<Brain className="w-4 h-4 text-[#E8D3A2]" />}
             description="Boosted by Coding & Study Quests"
           />
           <StatProgressBar
             label="STRENGTH"
             value={character.strength}
             max={150}
-            color="rose"
-            icon={<Dumbbell className="w-4 h-4" />}
+            color="amber"
+            icon={<Dumbbell className="w-4 h-4 text-[#E8D3A2]" />}
             description="Boosted by Fitness & Workout Quests"
           />
           <StatProgressBar
             label="WISDOM"
             value={character.wisdom}
             max={150}
-            color="purple"
-            icon={<BookOpen className="w-4 h-4" />}
+            color="amber"
+            icon={<BookOpen className="w-4 h-4 text-[#E8D3A2]" />}
             description="Boosted by Reading & Creative Quests"
           />
           <StatProgressBar
             label="AGILITY"
             value={character.agility}
             max={150}
-            color="emerald"
-            icon={<Zap className="w-4 h-4" />}
+            color="amber"
+            icon={<Zap className="w-4 h-4 text-[#E8D3A2]" />}
             description="Boosted by Running & Health Quests"
           />
           <StatProgressBar
@@ -144,7 +144,7 @@ export const CharacterCard: React.FC = () => {
             value={character.discipline}
             max={150}
             color="amber"
-            icon={<Shield className="w-4 h-4" />}
+            icon={<Shield className="w-4 h-4 text-[#E8D3A2]" />}
             description="Boosted by Meditation & Personal Quests"
           />
         </div>

@@ -26,7 +26,7 @@ export const BackgroundCanvas: React.FC = () => {
       color: string;
     }[] = [];
 
-    const colors = ['#00f0ff', '#3b82f6', '#a855f7', '#ffd700', '#ffffff'];
+    const colors = ['#E8D3A2', '#F5E7C6', '#B8C4D0', '#ffffff', '#E8D3A2'];
 
     for (let i = 0; i < particleCount; i++) {
       particles.push({
@@ -54,9 +54,9 @@ export const BackgroundCanvas: React.FC = () => {
 
       // Deep space gradient
       const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
-      bgGradient.addColorStop(0, '#050814');
-      bgGradient.addColorStop(0.5, '#080d1e');
-      bgGradient.addColorStop(1, '#050711');
+      bgGradient.addColorStop(0, '#071522');
+      bgGradient.addColorStop(0.5, '#0B1F33');
+      bgGradient.addColorStop(1, '#071522');
       ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, width, height);
 
@@ -69,8 +69,8 @@ export const BackgroundCanvas: React.FC = () => {
         height / 3,
         width * 0.7
       );
-      centerGlow.addColorStop(0, 'rgba(0, 240, 255, 0.04)');
-      centerGlow.addColorStop(0.5, 'rgba(168, 85, 247, 0.02)');
+      centerGlow.addColorStop(0, 'rgba(232, 211, 162, 0.04)');
+      centerGlow.addColorStop(0.5, 'rgba(16, 42, 67, 0.02)');
       centerGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = centerGlow;
       ctx.fillRect(0, 0, width, height);

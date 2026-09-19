@@ -27,17 +27,17 @@ export const InventoryPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#080c14] text-slate-100 font-mono pb-24">
+    <div className="min-h-screen bg-[#0B1F33] text-[#F8FAFC] font-['Plus_Jakarta_Sans',sans-serif] pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
         {/* Header */}
-        <div className="bg-[#0d1322] border border-cyan-500/20 rounded-3xl p-6 shadow-lg">
+        <div className="bg-[#102A43] border border-[#E8D3A2]/20 rounded-3xl p-6 shadow-xl">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-400 text-cyan-400">
-              <Shield className="w-8 h-8" />
+            <div className="p-3 rounded-2xl bg-[#E8D3A2]/10 border border-[#E8D3A2]/30 text-[#E8D3A2]">
+              <Shield className="w-8 h-8 text-[#E8D3A2]" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white">YOUR ARSENAL</h1>
-              <p className="text-xs text-slate-400">
+              <h1 className="text-2xl sm:text-3xl font-black text-[#F8FAFC]">YOUR ARSENAL</h1>
+              <p className="text-xs text-[#B8C4D0]">
                 View owned items and equip custom avatars, frames, themes, and legendary titles.
               </p>
             </div>
@@ -45,10 +45,10 @@ export const InventoryPage: React.FC = () => {
         </div>
 
         {ownedItems.length === 0 ? (
-          <div className="bg-[#0d1322] border border-cyan-500/20 rounded-3xl p-12 text-center space-y-4">
-            <Shield className="w-12 h-12 text-slate-600 mx-auto" />
-            <h4 className="text-base font-bold text-white">Your arsenal is empty.</h4>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto font-sans">
+          <div className="bg-[#102A43] border border-[#E8D3A2]/20 rounded-3xl p-12 text-center space-y-4">
+            <Shield className="w-12 h-12 text-[#B8C4D0]/40 mx-auto" />
+            <h4 className="text-base font-bold text-[#F8FAFC]">Your arsenal is empty.</h4>
+            <p className="text-xs text-[#B8C4D0] max-w-sm mx-auto">
               Complete quests, earn Gold, and visit the Guild Market to collect cosmetics!
             </p>
           </div>
@@ -60,29 +60,29 @@ export const InventoryPage: React.FC = () => {
               return (
                 <div
                   key={item.id}
-                  className={`bg-[#0d1322] border ${
-                    equipped ? 'border-cyan-400 shadow-[0_0_25px_rgba(0,240,255,0.3)]' : 'border-cyan-500/20'
-                  } rounded-3xl p-6 shadow-lg flex flex-col justify-between transition`}
+                  className={`bg-[#102A43] border ${
+                    equipped ? 'border-[#E8D3A2] shadow-[0_0_20px_rgba(232,211,162,0.3)]' : 'border-[#E8D3A2]/20'
+                  } rounded-3xl p-6 shadow-xl flex flex-col justify-between transition`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] text-cyan-400 font-bold uppercase">{item.type}</span>
+                      <span className="text-[10px] text-[#E8D3A2] font-bold uppercase">{item.type}</span>
                       {equipped && (
-                        <span className="text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-400 px-2 py-0.5 rounded-full font-bold">
+                        <span className="text-[10px] bg-[#E8D3A2]/20 text-[#E8D3A2] border border-[#E8D3A2] px-2 py-0.5 rounded-full font-bold">
                           EQUIPPED
                         </span>
                       )}
                     </div>
-                    <h3 className="text-base font-bold text-white mb-2">{item.name}</h3>
-                    <p className="text-xs text-slate-400 font-sans mb-6">{item.description}</p>
+                    <h3 className="text-base font-bold text-[#F8FAFC] mb-2">{item.name}</h3>
+                    <p className="text-xs text-[#B8C4D0] mb-6">{item.description}</p>
                   </div>
 
                   <button
                     onClick={() => handleEquip(item)}
-                    className={`w-full py-2.5 rounded-xl font-bold text-xs transition ${
+                    className={`w-full py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
                       equipped
-                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 cursor-default'
-                        : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-[#080c14] hover:from-cyan-300 hover:to-blue-400 shadow-md'
+                        ? 'bg-[#E8D3A2]/20 text-[#E8D3A2] border border-[#E8D3A2]/40 cursor-default'
+                        : 'bg-[#E8D3A2] hover:bg-[#F5E7C6] text-[#071522] font-black shadow-md'
                     }`}
                   >
                     {equipped ? 'EQUIPPED ON CHARACTER' : 'EQUIP ITEM'}
