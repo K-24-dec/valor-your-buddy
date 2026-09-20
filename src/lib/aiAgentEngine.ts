@@ -121,11 +121,9 @@ User Input: "${options.userMessage}"`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        contents: [
-          { role: 'system', parts: [{ text: systemPrompt }] },
-          ...contentsPayload,
-        ],
+        contents: contentsPayload,
         config: {
+          systemInstruction: systemPrompt,
           responseMimeType: 'application/json',
         },
       });

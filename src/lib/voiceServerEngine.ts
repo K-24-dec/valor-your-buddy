@@ -150,10 +150,10 @@ Return ONLY a valid JSON object matching this structure:
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: [
-          { role: 'system', parts: [{ text: systemPrompt }] },
           { role: 'user', parts: [{ text: `User Spoken Sentence: "${transcript}"` }] },
         ],
         config: {
+          systemInstruction: systemPrompt,
           responseMimeType: 'application/json',
         },
       });
