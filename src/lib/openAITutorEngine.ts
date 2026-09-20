@@ -1,4 +1,6 @@
 import { getStudentMistakeSummary, recordStudentMistakes, StudentMistakeRecord } from './studentStorage';
+import { generateAIChatResponseServer } from './aiAgentEngine';
+import { transcribeAudioServer } from './voiceServerEngine';
 
 export interface StructuredMistakeItem {
   type: 'grammar' | 'vocabulary' | 'sentence_formation' | 'pronunciation' | 'fluency' | 'general';
@@ -120,21 +122,50 @@ export async function executeOpenAITutorTurn(
     voice = 'onyx',
   } = options;
 
-  // Check if real OPENAI_API_KEY is configured
+  // If OPENAI_API_KEY is not configured, fall back to Gemini 2.5 Flash / Multi-LLM Engine!
   if (!isValidApiKey(apiKey)) {
-    const fallbackText = userMessage || 'Hello!';
+    let transcript = userMessage || '';
+    if (audioBase64 && !transcript) {
+      try {
+        const stt = await transcribeAudioServer(audioBase64, mimeType);
+        transcript = stt.text;
+      } catch (err) {
+        console.warn('[VoiceServerEngine STT Fallback] Multimodal STT error:', err);
+      }
+    }
+
+    if (!transcript.trim()) {
+      transcript = 'Hello';
+    }
+
+    const aiResult = await generateAIChatResponseServer({
+      userMessage: transcript,
+      targetLanguage,
+      nativeLanguage,
+      userLevel: 'intermediate',
+      conversationHistory: conversationHistory.map((h) => ({
+        role: (h.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
+        content: h.content,
+      })),
+    });
+
+    const mistakes: StructuredMistakeItem[] = [];
+    if (aiResult.correction && aiResult.correction.level !== 'none' && aiResult.correction.originalSnippet) {
+      mistakes.push({
+        type: 'grammar',
+        original_text: aiResult.correction.originalSnippet,
+        correction: aiResult.correction.correctedSnippet || '',
+        explanation: aiResult.correction.explanation || aiResult.correction.naturalCorrectionNote || '',
+      });
+      await recordStudentMistakes(studentId, mistakes);
+    }
+
     return {
-      transcript: fallbackText,
-      reply: `I hear you! To connect me to live OpenAI GPT-4o voice & brain, please replace "your_openai_api_key_here" with your actual OPENAI_API_KEY in the .env file. Meanwhile, I am here and ready to talk with you!`,
-      mistakes: [
-        {
-          type: 'general',
-          original_text: 'Setup Notice',
-          correction: 'Add OPENAI_API_KEY to .env file',
-          explanation: 'Replace your_openai_api_key_here in .env with your OpenAI API key from platform.openai.com',
-        },
-      ],
-      provider: 'Valor Offline Tutor Mode (Missing API Key)',
+      transcript,
+      reply: aiResult.agentReply,
+      mistakes,
+      studentMistakeSummary: await getStudentMistakeSummary(studentId),
+      provider: aiResult.llmProvider || 'Gemini 2.5 Flash',
     };
   }
 
