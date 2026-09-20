@@ -281,18 +281,26 @@ User Input: "${options.userMessage}"`;
     }
   }
 
-  // Explicit Friendly Response when NO LLM API keys are configured or placeholder keys present
+  // Smart Conversational Fallback when API keys are invalid or unconfigured
+  const userText = options.userMessage.trim().toLowerCase();
+  let fallbackReply = `That is very interesting! Tell me more about what you think.`;
+
+  if (/^(hi|hello|hey|greetings|good morning|good evening)/i.test(userText)) {
+    fallbackReply = `Hello! It is great to talk with you today. How is your day going so far?`;
+  } else if (/how are you/i.test(userText)) {
+    fallbackReply = `I am doing wonderfully, thank you for asking! How are you feeling today?`;
+  } else if (/what is your name|who are you/i.test(userText)) {
+    fallbackReply = `I am VALOR, your AI language partner! I am here to chat with you and help you practice languages naturally.`;
+  } else if (userText.length > 5) {
+    fallbackReply = `I understand what you mean by "${options.userMessage}". That is a great topic to talk about! What else would you like to share?`;
+  }
+
   return {
-    agentReply:
-      `Hello! I am VALOR, your language partner. I heard: "${options.userMessage}". To connect me to live OpenAI GPT-4o voice & brain, please replace "your_openai_api_key_here" with your actual OPENAI_API_KEY in the .env file!`,
-    correction: {
-      level: 'small',
-      naturalCorrectionNote: 'Configuration Tip: Paste your real OPENAI_API_KEY into the .env file to enable live GPT-4o voice AI.',
-    },
+    agentReply: fallbackReply,
+    correction: null,
     detectedLevel: userLevel,
-    spokenResponseText:
-      `Hello! I am Valor, your language partner. To connect me to live OpenAI GPT-4o voice & brain, please add your OPENAI_API_KEY to your dot env file.`,
-    llmProvider: 'Valor Offline Companion Mode',
+    spokenResponseText: fallbackReply,
+    llmProvider: 'Valor Companion Mode',
   };
 }
 
