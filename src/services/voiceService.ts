@@ -380,6 +380,68 @@ export async function transcribeAudio(
   throw new Error('STT transcription could not be completed.');
 }
 
+export interface SessionTurnPayload {
+  audioBlob?: Blob;
+  userMessage?: string;
+  studentId?: string;
+  targetLanguage?: string;
+  nativeLanguage?: string;
+  conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  voice?: 'onyx' | 'echo' | 'alloy' | 'fable' | 'nova' | 'shimmer';
+}
+
+export interface SessionTurnResponse {
+  transcript: string;
+  reply: string;
+  audioBase64?: string;
+  mistakes: Array<{
+    type: 'grammar' | 'vocabulary' | 'sentence_formation' | 'pronunciation' | 'fluency' | 'general';
+    original_text: string;
+    correction: string;
+    explanation: string;
+  }>;
+  studentMistakeSummary?: string;
+  provider: string;
+}
+
+/**
+ * Execute unified voice session turn with backend server (Whisper STT + GPT-4o + OpenAI TTS + Storage).
+ */
+export async function sendVoiceTurnSession(payload: SessionTurnPayload): Promise<SessionTurnResponse> {
+  let audioBase64: string | undefined = undefined;
+  let mimeType: string = 'audio/webm';
+
+  if (payload.audioBlob) {
+    mimeType = payload.audioBlob.type || 'audio/webm';
+    const buffer = await payload.audioBlob.arrayBuffer();
+    audioBase64 = btoa(
+      new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+    );
+  }
+
+  const res = await fetch('/api/voice/session-turn', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      audioBase64,
+      userMessage: payload.userMessage,
+      mimeType,
+      studentId: payload.studentId || 'default-student',
+      targetLanguage: payload.targetLanguage || 'English',
+      nativeLanguage: payload.nativeLanguage || 'English',
+      conversationHistory: payload.conversationHistory || [],
+      voice: payload.voice || 'onyx',
+    }),
+  });
+
+  if (!res.ok) {
+    const errorMsg = await res.text();
+    throw new Error(`Voice session turn failed: ${errorMsg}`);
+  }
+
+  return await res.json();
+}
+
 /**
  * Evaluate transcript for grammar/vocab errors via LLM backend endpoint (backward compatible).
  */

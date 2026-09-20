@@ -76,6 +76,12 @@ export interface TurnMessage {
   text: string;
   timestamp: string;
   correction?: AgentCorrection | null;
+  structuredMistakes?: Array<{
+    type: string;
+    original_text: string;
+    correction: string;
+    explanation: string;
+  }>;
   audioUrl?: string;
 }
 

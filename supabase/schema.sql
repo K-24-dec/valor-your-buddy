@@ -119,3 +119,28 @@ CREATE POLICY "Users access own quests" ON public.quests FOR ALL USING (auth.uid
 CREATE POLICY "Users access own chronicle" ON public.quest_completions FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users access own inventory" ON public.user_inventory FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users access own achievements" ON public.user_achievements FOR ALL USING (auth.uid() = user_id);
+
+-- 8. Students Profile Table
+CREATE TABLE IF NOT EXISTS public.students (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL DEFAULT 'Student',
+    target_language TEXT NOT NULL DEFAULT 'English',
+    native_language TEXT NOT NULL DEFAULT 'English',
+    user_level TEXT DEFAULT 'intermediate',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 9. Student Mistakes Persistent Log Table
+CREATE TABLE IF NOT EXISTS public.mistakes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    student_id TEXT NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
+    type TEXT NOT NULL,
+    original_text TEXT NOT NULL,
+    correction TEXT NOT NULL,
+    explanation TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index for fast lookup by student_id and timestamp
+CREATE INDEX IF NOT EXISTS idx_mistakes_student_created ON public.mistakes (student_id, created_at DESC);
+

@@ -9,6 +9,8 @@ import { processQuestCompletion, validateQuestCompletionEligibility } from './sr
 import { Character, Quest, QuestCompletion, Achievement } from './src/types/game';
 import { transcribeAudioServer, evaluateGrammarServer, synthesizeSpeechServer } from './src/lib/voiceServerEngine';
 import { generateAIChatResponseServer } from './src/lib/aiAgentEngine';
+import { executeOpenAITutorTurn } from './src/lib/openAITutorEngine';
+import { getStudentMistakes, getStudentMistakeSummary } from './src/lib/studentStorage';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -122,6 +124,64 @@ app.post('/api/voice/tts', async (req, res) => {
   } catch (err: any) {
     console.error('TTS API error:', err);
     res.status(500).json({ error: err.message || 'TTS synthesis failed.' });
+  }
+});
+
+// ------------------------------------
+// UNIFIED OPENAI VOICE & TUTOR TURN API
+// ------------------------------------
+
+// Unified Voice-First Turn: STT (Whisper) -> GPT-4o (structured reply & mistakes) -> TTS (OpenAI) -> Storage
+app.post('/api/voice/session-turn', async (req, res) => {
+  try {
+    const {
+      audioBase64,
+      userMessage,
+      mimeType,
+      studentId,
+      targetLanguage,
+      nativeLanguage,
+      conversationHistory,
+      voice,
+    } = req.body;
+
+    if (!audioBase64 && (!userMessage || typeof userMessage !== 'string')) {
+      return res.status(400).json({ error: 'Either audioBase64 or userMessage is required.' });
+    }
+
+    const result = await executeOpenAITutorTurn({
+      audioBase64,
+      userMessage,
+      mimeType,
+      studentId: studentId || 'default-student',
+      targetLanguage: targetLanguage || 'English',
+      nativeLanguage: nativeLanguage || 'English',
+      conversationHistory: conversationHistory || [],
+      voice: voice || 'onyx',
+    });
+
+    res.json(result);
+  } catch (err: any) {
+    console.error('Session Turn API error:', err);
+    res.status(500).json({ error: err.message || 'Voice turn processing failed.' });
+  }
+});
+
+// Fetch Student Mistake History & Memory Summary
+app.get('/api/students/:id/mistakes', async (req, res) => {
+  try {
+    const studentId = req.params.id || 'default-student';
+    const mistakes = await getStudentMistakes(studentId, 30);
+    const summary = await getStudentMistakeSummary(studentId);
+
+    res.json({
+      studentId,
+      mistakes,
+      summary,
+    });
+  } catch (err: any) {
+    console.error('Student Mistakes API error:', err);
+    res.status(500).json({ error: err.message || 'Failed to fetch student mistakes.' });
   }
 });
 

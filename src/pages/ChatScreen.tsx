@@ -38,6 +38,7 @@ import {
   transcribeAudio,
   voiceService,
   VoiceInfo,
+  sendVoiceTurnSession,
 } from '../services/voiceService';
 
 interface ChatScreenProps {
@@ -63,6 +64,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigateHome }) => {
 
   // Practice prompt state (for Level 3 important mistakes)
   const [practiceAnswerInput, setPracticeAnswerInput] = useState<string>('');
+  const [studentMemorySummary, setStudentMemorySummary] = useState<string>('');
 
   // Audio Recording State
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -72,68 +74,112 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigateHome }) => {
   // Auto Scroll Ref
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
-  // Synchronize Voice Engine Settings with User Preferences
-  useEffect(() => {
-    voiceService.setRate(prefs.voiceSpeed ?? 0.90);
-    voiceService.setPitch(prefs.voicePitch ?? 0.95);
-    voiceService.setVolume(prefs.voiceVolume ?? 0.90);
-    if (prefs.selectedVoiceURI) {
-      voiceService.setVoice(prefs.selectedVoiceURI);
-    }
-    localStorage.setItem('valor_preferences', JSON.stringify(prefs));
-  }, [prefs]);
+  const playBase64Audio = (audioBase64: string): Promise<void> => {
+    return new Promise((resolve) => {
+      try {
+        const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
+        audio.onended = () => resolve();
+        audio.onerror = () => resolve();
+        audio.play().catch(() => resolve());
+      } catch {
+        resolve();
+      }
+    });
+  };
 
-  // Load available voices on mount
-  useEffect(() => {
-    const voices = voiceService.getAvailableVoices();
-    setAvailableVoices(voices);
+  const processVoiceOrTextTurn = async (payload: { audioBlob?: Blob; userText?: string }) => {
+    voiceService.stop();
+    setIsAgentThinking(true);
 
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.onvoiceschanged = () => {
-        setAvailableVoices(voiceService.getAvailableVoices());
+    const historyForBackend = messages.map((m) => ({
+      role: (m.sender === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
+      content: m.text,
+    }));
+
+    try {
+      const response = await sendVoiceTurnSession({
+        audioBlob: payload.audioBlob,
+        userMessage: payload.userText,
+        studentId: 'default-student',
+        targetLanguage: prefs.targetLanguage,
+        nativeLanguage: prefs.nativeLanguage,
+        conversationHistory: historyForBackend,
+        voice: 'onyx',
+      });
+
+      setIsTranscribing(false);
+
+      // Append agent reply
+      const agentTurn: TurnMessage = {
+        id: `msg-${Date.now() + 1}`,
+        sender: 'agent',
+        text: response.reply,
+        structuredMistakes: response.mistakes,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
-    }
-  }, []);
+      (agentTurn as any).llmProvider = response.provider;
 
-  // Initial Greet Message (Calm Gentleman Persona)
-  useEffect(() => {
-    const initialGreeting: TurnMessage = {
-      id: 'msg-init',
-      sender: 'agent',
-      text: getInitialGreetingText(prefs),
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-    setMessages([initialGreeting]);
-  }, [prefs.mode, prefs.dailyTopic, prefs.targetLanguage]);
+      setMessages((prev) => [...prev, agentTurn]);
+      if (response.studentMistakeSummary) {
+        setStudentMemorySummary(response.studentMistakeSummary);
+      }
+      setIsAgentThinking(false);
 
-  useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isAgentThinking]);
+      // Play Audio TTS
+      if (prefs.autoTTS) {
+        setIsSpeaking(true);
+        if (response.audioBase64) {
+          await playBase64Audio(response.audioBase64);
+        } else {
+          await speakResponse(response.reply, {
+            rate: prefs.voiceSpeed,
+            pitch: prefs.voicePitch,
+            volume: prefs.voiceVolume,
+            voiceURI: prefs.selectedVoiceURI,
+          });
+        }
+        setIsSpeaking(false);
+      }
+    } catch (err: any) {
+      console.warn('Backend OpenAI Turn failed, using local agent fallback:', err);
+      if (payload.userText) {
+        await handleLocalAgentFallback(payload.userText);
+      } else {
+        setIsAgentThinking(false);
+        setIsTranscribing(false);
+      }
+    }
+  };
 
-  function getInitialGreetingText(p: UserPreferences): string {
-    if (p.mode === 'interview') {
-      return `Hey. Good to see you. Ready for your interview practice in ${p.targetLanguage}? Tell me a little about yourself when you're ready.`;
+  const handleLocalAgentFallback = async (textToSend: string) => {
+    try {
+      const result = await sendUserMessageToAgent(textToSend, messages, prefs);
+      const agentTurn: TurnMessage = {
+        id: `msg-${Date.now() + 1}`,
+        sender: 'agent',
+        text: result.agentReply,
+        correction: result.correction,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      (agentTurn as any).llmProvider = result.llmProvider;
+      setMessages((prev) => [...prev, agentTurn]);
+      setIsAgentThinking(false);
+
+      if (prefs.autoTTS && result.spokenResponseText) {
+        setIsSpeaking(true);
+        await speakResponse(result.spokenResponseText);
+        setIsSpeaking(false);
+      }
+    } catch (err) {
+      console.error('Fallback agent failed:', err);
+      setIsAgentThinking(false);
     }
-    if (p.mode === 'daily') {
-      const scenario = DAILY_SCENARIOS.find((s) => s.id === p.dailyTopic);
-      return scenario
-        ? `${scenario.icon} ${scenario.initialPrompt}`
-        : `Hey. Good to see you. How was your day today?`;
-    }
-    if (p.mode === 'debate') {
-      return `Welcome to Debate Mode. What is a topic you feel passionate about? Or shall I suggest one for us?`;
-    }
-    if (p.mode === 'story') {
-      return `Let us build a story together. Once upon a time in a quiet valley, a strange glowing door appeared in the forest... What happens next?`;
-    }
-    return `Hey. Good to see you. What would you like to talk about today?`;
-  }
+  };
 
   // Handle Sending a User Message (Text or Spoken)
   const handleSendMessage = async (textToSend: string) => {
     if (!textToSend.trim()) return;
 
-    // Stop any ongoing speech playback
     voiceService.stop();
 
     const userTurn: TurnMessage = {
@@ -145,45 +191,11 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigateHome }) => {
 
     setMessages((prev) => [...prev, userTurn]);
     setInputText('');
-    setIsAgentThinking(true);
-
-    try {
-      const result = await sendUserMessageToAgent(textToSend, messages, prefs);
-
-      const agentTurn: TurnMessage = {
-        id: `msg-${Date.now() + 1}`,
-        sender: 'agent',
-        text: result.agentReply,
-        correction: result.correction,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-
-      (agentTurn as any).llmProvider = result.llmProvider;
-      (agentTurn as any).error = result.error;
-
-      setMessages((prev) => [...prev, agentTurn]);
-      setIsAgentThinking(false);
-
-      // Play Voice TTS if AutoTTS enabled
-      if (prefs.autoTTS && result.spokenResponseText && !result.error) {
-        setIsSpeaking(true);
-        await speakResponse(result.spokenResponseText, {
-          rate: prefs.voiceSpeed,
-          pitch: prefs.voicePitch,
-          volume: prefs.voiceVolume,
-          voiceURI: prefs.selectedVoiceURI,
-        });
-        setIsSpeaking(false);
-      }
-    } catch (err) {
-      console.error('Error getting AI reply:', err);
-      setIsAgentThinking(false);
-    }
+    await processVoiceOrTextTurn({ userText: textToSend.trim() });
   };
 
   // Start Mic Recording
   const startRecording = async () => {
-    // Cancel ongoing speech when user starts talking
     voiceService.stop();
     setIsSpeaking(false);
 
@@ -198,7 +210,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigateHome }) => {
     }
   };
 
-  // Stop Mic Recording and process STT
+  // Stop Mic Recording and process STT & Voice Turn
   const stopRecordingAndSend = async () => {
     if (!recorderRef.current || !isRecording) return;
     setIsRecording(false);
@@ -208,44 +220,12 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigateHome }) => {
       const audioBlob = await recorderRef.current.stop();
       recorderRef.current = null;
 
-      let transcribedText = '';
-      try {
-        const reader = new FileReader();
-        const base64Promise = new Promise<string>((resolve) => {
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(audioBlob);
-        });
-        const base64Data = await base64Promise;
-        const pureBase64 = base64Data.split(',')[1] || base64Data;
-
-        const res = await fetch('/api/voice/stt', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ audioBase64: pureBase64, mimeType: audioBlob.type }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          transcribedText = data.text;
-        }
-      } catch (err) {
-        console.warn('Server STT failed, using Web Speech API fallback:', err);
-      }
-
-      if (!transcribedText.trim()) {
-        transcribedText = await recordWithWebSpeech();
-      }
-
-      setIsTranscribing(false);
-
-      if (transcribedText.trim()) {
-        handleSendMessage(transcribedText);
-      } else {
-        alert('No speech was detected. Please try speaking again.');
-      }
+      // Pass recorded audio blob directly to processVoiceOrTextTurn
+      await processVoiceOrTextTurn({ audioBlob });
     } catch (err: any) {
       console.error('Recording process error:', err);
       setIsTranscribing(false);
+      setIsAgentThinking(false);
     }
   };
 
@@ -518,6 +498,30 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigateHome }) => {
                     </div>
                   )}
                 </div>
+
+                {/* GPT-4o Structured Mistakes Callout Cards */}
+                {!isUser && msg.structuredMistakes && msg.structuredMistakes.length > 0 && (
+                  <div className="max-w-[85%] sm:max-w-[75%] bg-[#071522] border border-[#E8D3A2]/30 rounded-2xl p-3 text-xs space-y-2.5 text-left ml-2 shadow-xl">
+                    <div className="flex items-center gap-2 text-[#E8D3A2] font-bold text-xs">
+                      <AlertCircle className="w-4 h-4 text-[#E8D3A2]" />
+                      <span>Grammar & Vocabulary Feedback</span>
+                    </div>
+                    {msg.structuredMistakes.map((m, idx) => (
+                      <div key={idx} className="bg-[#102A43] border border-[#E8D3A2]/20 rounded-xl p-2.5 space-y-1">
+                        <div className="flex items-center justify-between text-[10px] font-mono text-[#E8D3A2]/80 uppercase">
+                          <span className="px-1.5 py-0.5 rounded bg-[#071522] border border-[#E8D3A2]/30">{m.type}</span>
+                        </div>
+                        <p className="text-[#F8FAFC]">
+                          Original: <span className="line-through text-rose-300 font-mono">"{m.original_text}"</span>
+                        </p>
+                        <p className="text-[#E8D3A2] font-semibold">
+                          Correction: <span className="text-emerald-300 font-mono font-bold">"{m.correction}"</span>
+                        </p>
+                        <p className="text-xs text-[#B8C4D0] italic">{m.explanation}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* 3-Level Conversational Correction Callout Card */}
                 {!isUser && corr && corr.level !== 'none' && (
