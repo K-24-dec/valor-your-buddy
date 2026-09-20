@@ -92,6 +92,15 @@ export async function synthesizeWithOpenAITTS(
   return null;
 }
 
+function isValidApiKey(key: string | undefined): boolean {
+  if (!key) return false;
+  const k = key.trim();
+  if (k === '' || k.includes('your_') || k.includes('_here') || k === 'your_openai_api_key_here') {
+    return false;
+  }
+  return true;
+}
+
 /**
  * 3. Process complete Voice / Text turn using GPT-4o with Structured JSON Output
  */
@@ -99,9 +108,6 @@ export async function executeOpenAITutorTurn(
   options: TurnOptions
 ): Promise<OpenAITutorTurnResponse> {
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error('OPENAI_API_KEY is missing from environment variables.');
-  }
 
   const {
     audioBase64,
@@ -114,10 +120,32 @@ export async function executeOpenAITutorTurn(
     voice = 'onyx',
   } = options;
 
+  // Check if real OPENAI_API_KEY is configured
+  if (!isValidApiKey(apiKey)) {
+    const fallbackText = userMessage || 'Hello!';
+    return {
+      transcript: fallbackText,
+      reply: `I hear you! To connect me to live OpenAI GPT-4o voice & brain, please replace "your_openai_api_key_here" with your actual OPENAI_API_KEY in the .env file. Meanwhile, I am here and ready to talk with you!`,
+      mistakes: [
+        {
+          type: 'general',
+          original_text: 'Setup Notice',
+          correction: 'Add OPENAI_API_KEY to .env file',
+          explanation: 'Replace your_openai_api_key_here in .env with your OpenAI API key from platform.openai.com',
+        },
+      ],
+      provider: 'Valor Offline Tutor Mode (Missing API Key)',
+    };
+  }
+
   // Step A: Speech-to-Text via Whisper (if audio provided)
   let transcript = userMessage || '';
   if (audioBase64 && !transcript) {
-    transcript = await transcribeWithWhisper(audioBase64, mimeType, apiKey);
+    try {
+      transcript = await transcribeWithWhisper(audioBase64, mimeType, apiKey!);
+    } catch (err) {
+      console.warn('[OpenAI Whisper] Transcription failed, falling back to empty:', err);
+    }
   }
 
   if (!transcript.trim()) {

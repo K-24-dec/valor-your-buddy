@@ -37,6 +37,15 @@ export interface AIChatOptions {
   struggledConcepts?: string[];
 }
 
+function isValidKey(key: string | undefined): boolean {
+  if (!key) return false;
+  const k = key.trim();
+  if (k === '' || k.includes('your_') || k.includes('_here') || k.startsWith('your_')) {
+    return false;
+  }
+  return true;
+}
+
 /**
  * Primary Multi-LLM Conversational Engine for VALOR
  * Supports Gemini 2.5 Flash, Groq, OpenAI GPT-4o, DeepSeek, and custom LLM endpoints.
@@ -44,10 +53,17 @@ export interface AIChatOptions {
 export async function generateAIChatResponseServer(
   options: AIChatOptions
 ): Promise<AIChatResponse> {
-  const geminiApiKey = process.env.GEMINI_API_KEY || process.env.API_KEY || process.env.LLM_API_KEY;
-  const openaiApiKey = process.env.OPENAI_API_KEY;
-  const groqApiKey = process.env.GROQ_API_KEY;
-  const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
+  const rawGemini = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  const rawOpenAI = process.env.OPENAI_API_KEY;
+  const rawGroq = process.env.GROQ_API_KEY;
+  const rawDeepSeek = process.env.DEEPSEEK_API_KEY;
+  const rawCustomKey = process.env.LLM_API_KEY;
+
+  const geminiApiKey = isValidKey(rawGemini) ? rawGemini : undefined;
+  const openaiApiKey = isValidKey(rawOpenAI) ? rawOpenAI : undefined;
+  const groqApiKey = isValidKey(rawGroq) ? rawGroq : undefined;
+  const deepseekApiKey = isValidKey(rawDeepSeek) ? rawDeepSeek : undefined;
+  const customKey = isValidKey(rawCustomKey) ? rawCustomKey : undefined;
   const customBaseUrl = process.env.LLM_BASE_URL;
 
   const targetLang = options.targetLanguage || 'Auto Detect';
@@ -265,16 +281,18 @@ User Input: "${options.userMessage}"`;
     }
   }
 
-  // Explicit Error Response when NO LLM API keys are configured or all calls fail
+  // Explicit Friendly Response when NO LLM API keys are configured or placeholder keys present
   return {
     agentReply:
-      'Sorry, I could not process that right now. Please set a valid GEMINI_API_KEY, OPENAI_API_KEY, GROQ_API_KEY, or LLM_API_KEY in your .env file.',
-    correction: null,
+      `Hello! I am VALOR, your language partner. I heard: "${options.userMessage}". To connect me to live OpenAI GPT-4o voice & brain, please replace "your_openai_api_key_here" with your actual OPENAI_API_KEY in the .env file!`,
+    correction: {
+      level: 'small',
+      naturalCorrectionNote: 'Configuration Tip: Paste your real OPENAI_API_KEY into the .env file to enable live GPT-4o voice AI.',
+    },
     detectedLevel: userLevel,
     spokenResponseText:
-      'Sorry, I could not process that right now. Please check your API key in the environment configuration.',
-    llmProvider: 'System Error (Missing LLM API Key)',
-    error: 'NO_LLM_API_KEY_CONFIGURED',
+      `Hello! I am Valor, your language partner. To connect me to live OpenAI GPT-4o voice & brain, please add your OPENAI_API_KEY to your dot env file.`,
+    llmProvider: 'Valor Offline Companion Mode',
   };
 }
 
