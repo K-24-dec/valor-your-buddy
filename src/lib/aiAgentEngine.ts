@@ -23,13 +23,14 @@ export interface AIChatResponse {
   suggestedTopicNext?: string;
   spokenResponseText: string;
   llmProvider: string;
+  error?: string;
 }
 
 export interface AIChatOptions {
   userMessage: string;
   targetLanguage: string;
   nativeLanguage: string;
-  mode: 'free' | 'interview' | 'daily' | 'debate' | 'story';
+  mode?: 'free' | 'interview' | 'daily' | 'debate' | 'story';
   dailyTopic?: string;
   userLevel?: 'beginner' | 'intermediate' | 'advanced';
   conversationHistory?: ChatMessage[];
@@ -37,89 +38,92 @@ export interface AIChatOptions {
 }
 
 /**
- * Generate AI Partner Conversational Turn using Gemini 2.5 Flash / OpenAI
+ * Primary Multi-LLM Conversational Engine for VALOR
+ * Supports Gemini 2.5 Flash, Groq, OpenAI GPT-4o, DeepSeek, and custom LLM endpoints.
  */
 export async function generateAIChatResponseServer(
   options: AIChatOptions
 ): Promise<AIChatResponse> {
-  const geminiApiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  const geminiApiKey = process.env.GEMINI_API_KEY || process.env.API_KEY || process.env.LLM_API_KEY;
   const openaiApiKey = process.env.OPENAI_API_KEY;
+  const groqApiKey = process.env.GROQ_API_KEY;
+  const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
+  const customBaseUrl = process.env.LLM_BASE_URL;
 
-  const targetLang = options.targetLanguage || 'English';
+  const targetLang = options.targetLanguage || 'Auto Detect';
   const nativeLang = options.nativeLanguage || 'English';
   const mode = options.mode || 'free';
   const userLevel = options.userLevel || 'intermediate';
   const dailyTopic = options.dailyTopic || 'general conversation';
 
-  const modeInstructions = {
-    free: `Engage in natural, friendly, open-ended conversation on any topic the user brings up.`,
-    interview: `Act as a supportive, professional interviewer. Ask relevant interview questions, follow up naturally on their answers, and give constructive partner feedback.`,
-    daily: `Simulate a real-world scenario about "${dailyTopic}". Act as a person in that situation (e.g. store assistant, friend at college, travel agent, restaurant server) and keep the roleplay natural.`,
-    debate: `Engage in a friendly debate on an interesting topic. State your perspective, ask for their opinion, and encourage them to express complex ideas.`,
-    story: `Build a story together interactively! Add 2-3 sentences to the narrative and ask the user what happens next or what a character does.`,
-  };
+  const systemPrompt = `You are Valor, a natural, intelligent, calm, warm, mature, multilingual conversational AI assistant.
 
-  const levelInstructions = {
-    beginner: `Use simple short sentences, common vocabulary, and clear, relaxed delivery. Be patient. Use native language (${nativeLang}) ONLY if necessary to clarify an unfamiliar word.`,
-    intermediate: `Use standard, natural conversational sentences. Keep the conversation flowing smoothly with common idioms and varied vocabulary.`,
-    advanced: `Use sophisticated vocabulary, idioms, complex sentence structures, and nuanced discussion. Offer subtle stylistic suggestions.`,
-  };
+PRIMARY PURPOSE: Respond dynamically to whatever the user actually says. Understand their intent, context, and conversation history. You are NOT a scripted chatbot.
 
-  const systemPrompt = `You are Valor, a calm, warm, patient, mature gentleman language-learning partner.
-PRIMARY PURPOSE: Help the learner build language confidence through relaxed, natural conversation in ${targetLang}.
-Learner Native Language: ${nativeLang}.
-Learner Target Language: ${targetLang}.
-Current Mode: ${mode.toUpperCase()} - ${modeInstructions[mode]}.
-Estimated Learner Proficiency Level: ${userLevel.toUpperCase()} - ${levelInstructions[userLevel]}.
+TOPIC FREEDOM:
+The user may ask about ANY topic including programming, technology, science, careers, travel, education, entertainment, hobbies, general knowledge, daily life, creative ideas, space, mathematics, or casual conversation.
+Answer the user's actual question directly and helpfully.
+If the user asks a follow-up question, understand what they are referring to from previous messages in the conversation history.
 
-PERSONALITY & VOICE TONE:
-- Calm, warm, friendly, patient, reassuring, intelligent, natural.
-- Speak like a gentleman having a pleasant, relaxed chat with a friend.
-- Do NOT use hyper-energetic or robotic classroom encouragement like "GREAT JOB!!!", "AMAZING!", "FANTASTIC!", "EXCELLENT!".
-- Use encouragement naturally and sparingly (e.g. "That's good.", "I understood what you meant.", "Nice work.", "That makes sense.").
+LANGUAGE & CODE-SWITCHING RULES:
+1. Automatically understand the language used by the user.
+2. If targetLanguage is "Auto Detect" or not explicitly locked, respond in whatever language the user speaks (English, Telugu, Hindi, German, Spanish, French, Japanese, Chinese, Korean, Italian, Portuguese, etc.).
+3. If the user switches languages during the conversation, switch naturally with them.
+4. Support natural code-switching (e.g. "Python lo arrays ela work chestayi?"). Understand mixed-language sentences and respond in matching natural code-switched language.
+5. If targetLanguage is explicitly set to a specific language (and not "Auto Detect"), write your response primarily in that target language.
 
-CORE RULES FOR RESPONSES:
-1. Prioritize natural conversation in ${targetLang} over long lectures or classroom drills. Feel like a conversation partner first, teacher second.
-2. Intelligent Correction System:
-   - "small": Small error. Respond conversationally to what they said FIRST, then add a short, gentle note (e.g., "By the way, a more natural way to say that is: 'I went yesterday.'").
-   - "repeated": Repeated pattern error. Briefly explain the pattern in 1 clear sentence and give another quick example.
-   - "important": Core error hindering understanding. Explain clearly and provide a quick fill-in-the-blank prompt (e.g., "Almost! We say 'She goes every day.' Try this: 'She ___ to college every day.'", practiceAnswer: "goes").
-   - "none": Clean or natural sentence. No correction needed.
-3. Keep agentReply natural, warm, and concise (2-4 sentences max).
-4. spokenResponseText should be a clean, audio-friendly version of agentReply + natural correction note combined.
+CONVERSATION & MEMORY RULES:
+- Remember relevant details from previous messages in this conversation (e.g. user name, topic context, code snippets).
+- Keep simple answers concise. Provide detailed explanations when requested.
+- Avoid repeating generic chatbot phrases such as "That's interesting!", "I really enjoy chatting with you!", "Tell me more!", or "What happened in your week?".
+- Do NOT force a question at the end of every message unless genuinely useful.
+
+OPTIONAL LANGUAGE CORRECTION (Only if applicable):
+If the user makes a clear grammar or vocabulary mistake while learning a language, you may populate the correction object with a gentle note. Otherwise set level to "none".
 
 Return ONLY a JSON object with this structure:
 {
-  "agentReply": "Your main conversational reply in ${targetLang}",
+  "agentReply": "Your dynamic response in the user's language",
   "correction": {
     "level": "small" | "repeated" | "important" | "none",
     "originalSnippet": "problematic phrase or empty if none",
     "correctedSnippet": "corrected phrase or empty if none",
     "explanation": "brief explanation if relevant",
-    "naturalCorrectionNote": "subtle friendly note if small/repeated mistake",
+    "naturalCorrectionNote": "subtle gentle note if small/repeated mistake, or empty if none",
     "practicePrompt": "fill in blank prompt if level is important, otherwise empty",
     "practiceAnswer": "answer for practice prompt if level is important"
   },
   "detectedLevel": "${userLevel}",
-  "spokenResponseText": "Text suitable for TTS voice readout"
+  "spokenResponseText": "Text suitable for TTS audio readout"
 }`;
 
-  const formattedHistory = (options.conversationHistory || [])
-    .slice(-6)
-    .map((msg) => `${msg.role === 'user' ? 'Learner' : 'Valor'}: ${msg.content}`)
-    .join('\n');
+  // Format Conversation History into Messages Array
+  const historyMessages = (options.conversationHistory || []).slice(-10).map((msg: any) => ({
+    role: (msg.role === 'user' || msg.sender === 'user') ? ('user' as const) : ('assistant' as const),
+    content: msg.content || msg.text || '',
+  }));
 
-  const userPrompt = `Conversation History:\n${formattedHistory}\n\nLearner says: "${options.userMessage}"`;
+  const userPromptText = `Target Language setting: ${targetLang}
+Learner Native Language: ${nativeLang}
+User Input: "${options.userMessage}"`;
 
-  // 1. Try Gemini LLM
+  // 1. Try Gemini LLM API
   if (geminiApiKey) {
     try {
       const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+      const contentsPayload = [
+        ...historyMessages.map((m) => ({
+          role: m.role === 'user' ? 'user' : 'model',
+          parts: [{ text: m.content }],
+        })),
+        { role: 'user', parts: [{ text: userPromptText }] },
+      ];
+
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: [
           { role: 'system', parts: [{ text: systemPrompt }] },
-          { role: 'user', parts: [{ text: userPrompt }] },
+          ...contentsPayload,
         ],
         config: {
           responseMimeType: 'application/json',
@@ -128,38 +132,46 @@ Return ONLY a JSON object with this structure:
 
       if (response.text) {
         const parsed = JSON.parse(response.text);
-        const correctionObj: AgentCorrection | null =
-          parsed.correction && parsed.correction.level !== 'none'
-            ? {
-                level: parsed.correction.level || 'small',
-                originalSnippet: parsed.correction.originalSnippet || '',
-                correctedSnippet: parsed.correction.correctedSnippet || '',
-                explanation: parsed.correction.explanation || '',
-                naturalCorrectionNote: parsed.correction.naturalCorrectionNote || '',
-                practicePrompt: parsed.correction.practicePrompt || '',
-                practiceAnswer: parsed.correction.practiceAnswer || '',
-              }
-            : null;
-
-        const agentReply = parsed.agentReply || 'That sounds interesting! Tell me more.';
-        const spokenText =
-          parsed.spokenResponseText ||
-          `${agentReply} ${correctionObj?.naturalCorrectionNote || ''}`;
-
-        return {
-          agentReply,
-          correction: correctionObj,
-          detectedLevel: parsed.detectedLevel || userLevel,
-          spokenResponseText: spokenText.trim(),
-          llmProvider: 'Gemini 2.5 Flash',
-        };
+        return parseAndFormatResponse(parsed, 'Gemini 2.5 Flash', userLevel);
       }
     } catch (err) {
-      console.warn('Gemini AI Chat generation failed, falling back:', err);
+      console.warn('Gemini LLM call failed, trying next provider:', err);
     }
   }
 
-  // 2. Try OpenAI Chat Completions fallback
+  // 2. Try Groq API (High Speed Llama-3.3-70b)
+  if (groqApiKey) {
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${groqApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...historyMessages,
+            { role: 'user', content: userPromptText },
+          ],
+          response_format: { type: 'json_object' },
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.choices[0]?.message?.content;
+        if (content) {
+          return parseAndFormatResponse(JSON.parse(content), 'Groq Llama-3.3-70b', userLevel);
+        }
+      }
+    } catch (err) {
+      console.warn('Groq LLM call failed:', err);
+    }
+  }
+
+  // 3. Try OpenAI API
   if (openaiApiKey) {
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -172,113 +184,132 @@ Return ONLY a JSON object with this structure:
           model: 'gpt-4o-mini',
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
+            ...historyMessages,
+            { role: 'user', content: userPromptText },
           ],
           response_format: { type: 'json_object' },
         }),
       });
 
       if (response.ok) {
-        const result = await response.json();
-        const content = result.choices[0]?.message?.content;
+        const data = await response.json();
+        const content = data.choices[0]?.message?.content;
         if (content) {
-          const parsed = JSON.parse(content);
-          const correctionObj: AgentCorrection | null =
-            parsed.correction && parsed.correction.level !== 'none'
-              ? {
-                  level: parsed.correction.level || 'small',
-                  originalSnippet: parsed.correction.originalSnippet || '',
-                  correctedSnippet: parsed.correction.correctedSnippet || '',
-                  explanation: parsed.correction.explanation || '',
-                  naturalCorrectionNote: parsed.correction.naturalCorrectionNote || '',
-                  practicePrompt: parsed.correction.practicePrompt || '',
-                  practiceAnswer: parsed.correction.practiceAnswer || '',
-                }
-              : null;
-
-          return {
-            agentReply: parsed.agentReply || 'That sounds great! Tell me more.',
-            correction: correctionObj,
-            detectedLevel: parsed.detectedLevel || userLevel,
-            spokenResponseText: parsed.spokenResponseText || parsed.agentReply,
-            llmProvider: 'OpenAI GPT-4o-mini',
-          };
+          return parseAndFormatResponse(JSON.parse(content), 'OpenAI GPT-4o-mini', userLevel);
         }
       }
     } catch (err) {
-      console.warn('OpenAI AI Chat generation failed:', err);
+      console.warn('OpenAI LLM call failed:', err);
     }
   }
 
-  // 3. Robust Client/Rule-Based Smart Fallback
-  return generateFallbackAIChatResponse(options);
+  // 4. Try DeepSeek API
+  if (deepseekApiKey) {
+    try {
+      const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${deepseekApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...historyMessages,
+            { role: 'user', content: userPromptText },
+          ],
+          response_format: { type: 'json_object' },
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.choices[0]?.message?.content;
+        if (content) {
+          return parseAndFormatResponse(JSON.parse(content), 'DeepSeek V3', userLevel);
+        }
+      }
+    } catch (err) {
+      console.warn('DeepSeek LLM call failed:', err);
+    }
+  }
+
+  // 5. Try Custom OpenAI-Compatible Base URL (e.g. Local Ollama or custom API)
+  if (customBaseUrl) {
+    try {
+      const endpoint = customBaseUrl.endsWith('/chat/completions')
+        ? customBaseUrl
+        : `${customBaseUrl.replace(/\/$/, '')}/chat/completions`;
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'default',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...historyMessages,
+            { role: 'user', content: userPromptText },
+          ],
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.choices[0]?.message?.content;
+        if (content) {
+          return parseAndFormatResponse(JSON.parse(content), 'Custom LLM Endpoint', userLevel);
+        }
+      }
+    } catch (err) {
+      console.warn('Custom Base URL LLM call failed:', err);
+    }
+  }
+
+  // Explicit Error Response when NO LLM API keys are configured or all calls fail
+  return {
+    agentReply:
+      'Sorry, I could not process that right now. Please set a valid GEMINI_API_KEY, OPENAI_API_KEY, GROQ_API_KEY, or LLM_API_KEY in your .env file.',
+    correction: null,
+    detectedLevel: userLevel,
+    spokenResponseText:
+      'Sorry, I could not process that right now. Please check your API key in the environment configuration.',
+    llmProvider: 'System Error (Missing LLM API Key)',
+    error: 'NO_LLM_API_KEY_CONFIGURED',
+  };
 }
 
-/**
- * Intelligent Rule-Based Fallback AI Partner Generator
- */
+function parseAndFormatResponse(
+  parsed: any,
+  providerName: string,
+  fallbackLevel: 'beginner' | 'intermediate' | 'advanced'
+): AIChatResponse {
+  const correctionObj: AgentCorrection | null =
+    parsed.correction && parsed.correction.level && parsed.correction.level !== 'none'
+      ? {
+          level: parsed.correction.level || 'small',
+          originalSnippet: parsed.correction.originalSnippet || '',
+          correctedSnippet: parsed.correction.correctedSnippet || '',
+          explanation: parsed.correction.explanation || '',
+          naturalCorrectionNote: parsed.correction.naturalCorrectionNote || '',
+          practicePrompt: parsed.correction.practicePrompt || '',
+          practiceAnswer: parsed.correction.practiceAnswer || '',
+        }
+      : null;
 
-export function generateFallbackAIChatResponse(options: AIChatOptions): AIChatResponse {
-  const input = options.userMessage.trim();
-  const targetLang = options.targetLanguage || 'English';
-  let agentReply = `That's great! Let's keep talking in ${targetLang}. What else would you like to discuss today?`;
-  let correction: AgentCorrection | null = null;
-
-  // Simple pattern detection for common learner errors
-  if (/\b(go yesterday|wenting|i goes|she go|he go)\b/i.test(input)) {
-    if (/\bi go yesterday\b/i.test(input)) {
-      agentReply = `Nice! What did you do yesterday?`;
-      correction = {
-        level: 'small',
-        originalSnippet: 'I go yesterday',
-        correctedSnippet: 'I went yesterday',
-        explanation: 'Past tense of "go" is "went".',
-        naturalCorrectionNote: `By the way, a more natural way to say that is: "I went yesterday."`,
-      };
-    } else if (/\bshe go\b/i.test(input) || /\bhe go\b/i.test(input)) {
-      agentReply = `I understand! Does that happen every day?`;
-      correction = {
-        level: 'important',
-        originalSnippet: 'she go',
-        correctedSnippet: 'she goes',
-        explanation: 'Use "goes" for third person singular (he/she/it).',
-        naturalCorrectionNote: `Almost! We say "She goes..."`,
-        practicePrompt: `Try this: "She ___ to college every day."`,
-        practiceAnswer: 'goes',
-      };
-    }
-  } else if (/\bme want\b/i.test(input)) {
-    agentReply = `Sounds good! Tell me more about what you like to do.`;
-    correction = {
-      level: 'small',
-      originalSnippet: 'me want',
-      correctedSnippet: 'I want',
-      naturalCorrectionNote: `By the way, a more natural phrasing is "I want..." instead of "Me want..."`,
-    };
-  } else {
-    // Mode-specific fallback responses
-    if (options.mode === 'interview') {
-      agentReply = `Thank you for sharing that. Could you give me an example of a challenge you faced and how you overcame it?`;
-    } else if (options.mode === 'daily') {
-      agentReply = `Welcome! How can I help you today? Would you like to check out our menu or place an order?`;
-    } else if (options.mode === 'debate') {
-      agentReply = `That is an interesting point of view! However, some people might argue the opposite. What is your strongest reason?`;
-    } else if (options.mode === 'story') {
-      agentReply = `Suddenly, a mysterious key appeared on the table! What do we do next?`;
-    } else {
-      agentReply = `I really enjoy chatting with you! What is something interesting that happened in your week so far?`;
-    }
-  }
-
-  const spokenText = correction
-    ? `${agentReply} ${correction.naturalCorrectionNote || ''}`
-    : agentReply;
+  const agentReply = parsed.agentReply || 'I understand! Tell me more.';
+  const spokenText =
+    parsed.spokenResponseText ||
+    (correctionObj?.naturalCorrectionNote
+      ? `${agentReply} ${correctionObj.naturalCorrectionNote}`
+      : agentReply);
 
   return {
     agentReply,
-    correction,
-    detectedLevel: options.userLevel || 'intermediate',
-    spokenResponseText: spokenText,
-    llmProvider: 'Valor Intelligent Local Engine',
+    correction: correctionObj,
+    detectedLevel: parsed.detectedLevel || fallbackLevel,
+    spokenResponseText: spokenText.trim(),
+    llmProvider: providerName,
   };
 }

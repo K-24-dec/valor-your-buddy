@@ -158,11 +158,14 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigateHome }) => {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
+      (agentTurn as any).llmProvider = result.llmProvider;
+      (agentTurn as any).error = result.error;
+
       setMessages((prev) => [...prev, agentTurn]);
       setIsAgentThinking(false);
 
       // Play Voice TTS if AutoTTS enabled
-      if (prefs.autoTTS && result.spokenResponseText) {
+      if (prefs.autoTTS && result.spokenResponseText && !result.error) {
         setIsSpeaking(true);
         await speakResponse(result.spokenResponseText, {
           rate: prefs.voiceSpeed,
@@ -487,8 +490,15 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigateHome }) => {
                   <p className="text-sm md:text-base leading-relaxed">{msg.text}</p>
 
                   {!isUser && (
-                    <div className="mt-2 flex items-center justify-between text-[11px] opacity-75 pt-1 border-t border-[#E8D3A2]/10">
-                      <span className="font-mono text-[#B8C4D0]">{msg.timestamp}</span>
+                    <div className="mt-2 flex items-center justify-between text-[11px] opacity-75 pt-1 border-t border-[#E8D3A2]/10 gap-2">
+                      <div className="flex items-center gap-1.5 font-mono text-[#B8C4D0]">
+                        <span>{msg.timestamp}</span>
+                        {(msg as any).llmProvider && (
+                          <span className="px-1.5 py-0.5 rounded bg-[#102A43] text-[#E8D3A2] border border-[#E8D3A2]/30 text-[10px]">
+                            ⚡ {(msg as any).llmProvider}
+                          </span>
+                        )}
+                      </div>
                       <button
                         onClick={() => {
                           setIsSpeaking(true);
