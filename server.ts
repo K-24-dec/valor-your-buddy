@@ -236,24 +236,9 @@ async function startServer() {
     app.use('*', async (req, res, next) => {
       const url = req.originalUrl;
       try {
-        let template = await vite.transformIndexHtml(
-          url,
-          `
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta charset="UTF-8" />
-              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-              <title>LIFE RPG — Turn your real life into an adventure</title>
-              <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-            </head>
-            <body class="bg-[#080c14] text-slate-100 font-mono">
-              <div id="root"></div>
-              <script type="module" src="/src/main.tsx"></script>
-            </body>
-          </html>
-        `
-        );
+        const fs = await import('fs');
+        const rawIndexHtml = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf-8');
+        let template = await vite.transformIndexHtml(url, rawIndexHtml);
         res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
       } catch (e) {
         vite.ssrFixStacktrace(e as Error);
@@ -270,7 +255,7 @@ async function startServer() {
   }
 
   app.listen(PORT, () => {
-    console.log(`⚔️ LIFE RPG Server running at http://localhost:${PORT}`);
+    console.log(`🎙️ VALOR — AI Language Partner running at http://localhost:${PORT}`);
   });
 }
 
